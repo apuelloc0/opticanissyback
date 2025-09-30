@@ -12,15 +12,33 @@ const resend = new Resend(process.env.RESEND_API_KEY, {
 });
 
 // Dirección de email a la que llegarán los mensajes
-const EMAIL_TO = process.env.EMAIL_TO || "tucorreo@ejemplo.com";
+const EMAIL_TO = process.env.EMAIL_TO;
 // Dirección de email desde la que se enviarán los mensajes (debe ser de un dominio verificado en Resend)
 const EMAIL_FROM =
   process.env.EMAIL_FROM || "Optica Nissy <onboarding@resend.dev>";
 
+// Verificación de variables de entorno críticas al inicio
+if (!process.env.RESEND_API_KEY || !EMAIL_TO) {
+  console.error("Error: Faltan variables de entorno críticas (RESEND_API_KEY, EMAIL_TO). El servidor no puede iniciar.");
+  process.exit(1); // Detiene la aplicación si no están configuradas
+}
+
 // --- Middlewares ---
-// 1. Habilitar CORS de forma segura para producción
+// 1. Habilitar CORS de forma segura para producción, permitiendo múltiples orígenes
+const allowedOrigins = (
+  process.env.CORS_ORIGIN || "http://localhost:4321"
+).split(",");
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "http://localhost:4321", // Fallback para el servidor de desarrollo de Astro
+  origin: function (origin, callback) {
+    // Permite peticiones sin origen (como Postman o apps móviles)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `El origen '${origin}' no está permitido por la política de CORS.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
