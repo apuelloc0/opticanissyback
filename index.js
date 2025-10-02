@@ -46,14 +46,15 @@ app.use(cors(corsOptions));
 // 2. Limitar la cantidad de solicitudes por IP a 2 por día
 const limiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 horas
-  max: 2, // Límite de 2 peticiones por ventana (por IP)
+  max: 50, // Límite de 50 peticiones por IP cada 24 horas
   message:
-    "Has alcanzado el límite de 2 mensajes por día. Por favor, inténtalo de nuevo mañana.",
+    "Has alcanzado el límite de mensajes por día. Por favor, inténtalo de nuevo mañana.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 app.use(limiter);
+// app.use(limiter); // Descomenta esta línea cuando termines de probar
 // 2. Middleware para parsear el cuerpo de las peticiones como JSON
 app.use(express.json());
 
